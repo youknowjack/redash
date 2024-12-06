@@ -8,12 +8,12 @@ x-redash-service: &redash-service
   volumes:
     - .:/app
   env_file:
-    - .env
+    - /opt/redash/env
 x-redash-environment: &redash-environment
   REDASH_HOST: http://localhost:5001
   REDASH_LOG_LEVEL: "INFO"
   REDASH_REDIS_URL: "redis://redis:6379/0"
-  REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
+  REDASH_DATABASE_URL: "postgresql://postgres:X8O8uCM54NXbTxqtXZG9QLDWpiQ9nx0i@postgres/postgres"
   REDASH_RATELIMIT_ENABLED: "false"
   REDASH_MAIL_DEFAULT_SENDER: "redash@example.com"
   REDASH_MAIL_SERVER: "email"
@@ -53,7 +53,9 @@ services:
     image: redis:7-alpine
     restart: unless-stopped
   postgres:
-    image: postgres:18-alpine
+    image: pgautoupgrade/pgautoupgrade:latest
+    volumes:
+      - /opt/redash/postgres-data:/var/lib/postgresql/data
     ports:
       - "15432:5432"
     # The following turns the DB into less durable, but gains significant performance improvements for the tests run (x3
