@@ -5,9 +5,6 @@ compose_build: .env
 
 up:
 	docker compose up -d redis postgres --remove-orphans
-	docker compose exec -u postgres postgres psql postgres --csv \
-		-1tqc "SELECT table_name FROM information_schema.tables WHERE table_name = 'organizations'" 2> /dev/null \
-		| grep -q "organizations" || make create_database
 	COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker compose up -d --build --remove-orphans
 
 test_db:
