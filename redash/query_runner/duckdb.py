@@ -92,7 +92,11 @@ class DuckDB(BaseSQLQueryRunner):
 
     def _connect(self) -> None:
         external_access = self.configuration.get("external_access", True)
-        self.con = duckdb.connect(self.dbpath, config={"enable_external_access": external_access})
+        memory_limit = self.configuration.get("memory_limit", "8GB")
+        config = {"enable_external_access": external_access}
+        if memory_limit:
+            config["memory_limit"] = memory_limit
+        self.con = duckdb.connect(self.dbpath, config=config)
         for ext in self.extensions:
             try:
                 if "." in ext:
@@ -109,17 +113,13 @@ class DuckDB(BaseSQLQueryRunner):
                 logger.warning("Failed to load extension %s: %s", ext, e)
         if not external_access:
             self.con.execute("SET disabled_filesystems = 'LocalFileSystem'")
-        memory_limit = self.configuration.get("memory_limit", "8GB")
-        if memory_limit:
-            self.con.execute(f"SET memory_limit = '{memory_limit}'")
-        self.con.execute("SET lock_configuration = true")
 
     def run_query(self, query, user) -> tuple:
         try:
             cursor = self.con.cursor()
             cursor.execute(query)
             columns = self.fetch_columns(
-                [(d[0], TYPES_MAP.get(d[1].upper(), TYPE_STRING)) for d in cursor.description]
+                [(d[0], TYPES_MAP.get(str(d[1]).upper(), TYPE_STRING)) for d in cursor.description]
             )
             rows = [dict(zip((col["name"] for col in columns), row)) for row in cursor.fetchall()]
             data = {"columns": columns, "rows": rows}
