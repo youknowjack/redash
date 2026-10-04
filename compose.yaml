@@ -3,10 +3,12 @@
 x-redash-service: &redash-service
   build:
     context: .
-    args:
-      skip_frontend_build: "true"  # set to empty string to build
+    dockerfile: Dockerfile.local
+  image: redash-local:latest
   volumes:
     - .:/app
+    - /Users/jack/oss/builder-gcd-etl/gcd-parquet:/data/gcd-parquet:ro
+    - /Users/jack/oss/builder-gcd-etl/gcd-db:/data/gcd-db
   env_file:
     - /opt/redash/env
 x-redash-environment: &redash-environment
