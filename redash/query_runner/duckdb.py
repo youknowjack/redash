@@ -76,8 +76,13 @@ class DuckDB(BaseSQLQueryRunner):
                     "title": "Enable External Access (filesystem & network)",
                     "default": True,
                 },
+                "memory_limit": {
+                    "type": "string",
+                    "title": "Memory Limit (e.g. 8GB)",
+                    "default": "8GB",
+                },
             },
-            "order": ["dbpath", "extensions", "external_access"],
+            "order": ["dbpath", "extensions", "external_access", "memory_limit"],
             "required": ["dbpath"],
         }
 
@@ -102,7 +107,11 @@ class DuckDB(BaseSQLQueryRunner):
                     self.con.execute(f"LOAD {ext}")
             except Exception as e:
                 logger.warning("Failed to load extension %s: %s", ext, e)
-        self.con.execute("SET disabled_filesystems = 'LocalFileSystem'")
+        if not external_access:
+            self.con.execute("SET disabled_filesystems = 'LocalFileSystem'")
+        memory_limit = self.configuration.get("memory_limit", "8GB")
+        if memory_limit:
+            self.con.execute(f"SET memory_limit = '{memory_limit}'")
         self.con.execute("SET lock_configuration = true")
 
     def run_query(self, query, user) -> tuple:
